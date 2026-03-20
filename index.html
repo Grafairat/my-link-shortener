@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>figma.fun — Shorten any link</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #7c6aff;
+    --accent2: #ff6ab0;
+    --accent3: #6affcc;
+    --text: #f0eeff;
+    --muted: #7070a0;
+    --success: #4ade80;
+    --danger: #f87171;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,106,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,106,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb1 { width: 400px; height: 400px; background: rgba(124,106,255,0.12); top: -100px; left: -100px; }
+  .orb2 { width: 300px; height: 300px; background: rgba(255,106,176,0.08); bottom: 20%; right: -80px; }
+  .orb3 { width: 200px; height: 200px; background: rgba(106,255,204,0.06); top: 50%; left: 40%; }
+
+  .wrapper { position: relative; z-index: 1; }
+
+  /* ── NAV ── */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--accent); }
+  nav .nav-links { display: flex; gap: 8px; }
+  nav button {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    transition: all 0.2s;
+  }
+  nav button:hover, nav button.active {
+    border-color: var(--accent);
+    color: var(--text);
+    background: rgba(124,106,255,0.08);
+  }
+  nav button.active { color: var(--accent); }
+
+  /* ── PAGES ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── HOME ── */
+  .hero {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 80px 24px 40px;
+    text-align: center;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(124,106,255,0.1);
+    border: 1px solid rgba(124,106,255,0.3);
+    border-radius: 100px;
+    padding: 5px 14px;
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 28px;
+    font-family: 'DM Mono', monospace;
+  }
+  .hero-badge::before { content: '◆'; font-size: 8px; }
+  .hero h1 {
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    margin-bottom: 16px;
+  }
+  .hero h1 .grad {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero p {
+    color: var(--muted);
+    font-size: 17px;
+    line-height: 1.6;
+    margin-bottom: 48px;
+    font-weight: 400;
+  }
+
+  /* ── SHORTEN FORM ── */
+  .shorten-form {
+    display: flex;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 8px 8px 8px 20px;
+    transition: border-color 0.2s;
+    align-items: center;
+  }
+  .shorten-form:focus-within { border-color: var(--accent); }
+  .shorten-form input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 15px;
+    font-family: 'DM Mono', monospace;
+    min-width: 0;
+  }
+  .shorten-form input::placeholder { color: var(--muted); }
+  .btn-shorten {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .btn-shorten:hover { background: #6a58f0; transform: translateY(-1px); }
+  .btn-shorten:active { transform: translateY(0); }
+
+  /* ── RESULT ── */
+  .result-box {
+    margin-top: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 24px;
+    display: none;
+    animation: slideUp 0.3s ease;
+  }
+  .result-box.visible { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .result-url {
+    flex: 1;
+    min-width: 0;
+  }
+  .result-url .label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 4px;
+  }
+  .result-url .short-link {
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--accent3);
+    text-decoration: none;
+    word-break: break-all;
+  }
+  .result-url .orig-link {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+    font-family: 'DM Mono', monospace;
+  }
+  .result-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .btn-copy, .btn-qr {
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+  }
+  .btn-copy { background: rgba(106,255,204,0.1); color: var(--accent3); border-color: rgba(106,255,204,0.3); }
+  .btn-copy:hover { background: rgba(106,255,204,0.2); }
+  .btn-copy.copied { background: rgba(74,222,128,0.15); color: var(--success); border-color: var(--success); }
+  .btn-qr { background: var(--surface2); color: var(--muted); }
+  .btn-qr:hover { color: var(--text); border-color: var(--accent); }
+
+  /* ── STATS STRIP ── */
+  .stats-strip {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    margin: 56px 0 0;
+    padding: 32px 0;
+    border-top: 1px solid var(--border);
+  }
+  .stat { text-align: center; }
+  .stat-num { font-size: 32px; font-weight: 800; letter-spacing: -1px; color: var(--text); }
+  .stat-num span { color: var(--accent); }
+  .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; font-family: 'DM Mono', monospace; }
+
+  /* ── RECENT LINKS ── */
+  .recent-section {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+  }
+  .section-title {
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .links-list { display: flex; flex-direction: column; gap: 8px; }
+  .link-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: border-color 0.2s;
+    cursor: pointer;
+  }
+  .link-item:hover { border-color: rgba(124,106,255,0.4); }
+  .link-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(124,106,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 16px;
+  }
+  .link-info { flex: 1; min-width: 0; }
+  .link-short { font-family: 'DM Mono', monospace; font-size: 14px; color: var(--accent3); }
+  .link-orig { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; font-family: 'DM Mono', monospace; }
+  .link-meta { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  .link-clicks {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .link-clicks::before { content: '↗'; color: var(--accent); font-size: 11px; }
+  .link-date { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .link-actions { display: flex; gap: 6px; }
+  .btn-sm {
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm.danger:hover { border-color: var(--danger); color: var(--danger); }
+  .empty-state {
+    text-align: center;
+    padding: 40px 0;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+  }
+  .empty-state .emoji { font-size: 32px; display: block; margin-bottom: 12px; }
+
+  /* ── ANALYTICS PAGE ── */
+  .analytics-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px;
+  }
+  .page-header {
+    margin-bottom: 32px;
+  }
+  .page-header h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .page-header p { color: var(--muted); font-size: 14px; margin-top: 6px; font-family: 'DM Mono', monospace; }
+
+  .analytics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 600px) {
+    .analytics-grid { grid-template-columns: 1fr; }
+    .shorten-form { flex-direction: column; padding: 12px; }
+    .btn-shorten { width: 100%; }
+    nav { padding: 16px 20px; }
+    .stats-strip { gap: 24px; }
+    .link-date, .link-actions { display: none; }
+  }
+
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+  }
+  .metric-label { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+  .metric-value { font-size: 36px; font-weight: 800; letter-spacing: -1px; }
+  .metric-sub { font-size: 12px; color: var(--muted); margin-top: 4px; font-family: 'DM Mono', monospace; }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .chart-title { font-size: 13px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  .chart-title .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* Bar chart */
+  .bar-chart { display: flex; flex-direction: column; gap: 10px; }
+  .bar-row { display: flex; align-items: center; gap: 12px; }
+  .bar-label { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); width: 100px; flex-shrink: 0; }
+  .bar-track { flex: 1; background: var(--surface2); border-radius: 4px; height: 8px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+  .bar-count { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); width: 36px; text-align: right; flex-shrink: 0; }
+
+  /* Donut chart */
+  .donut-wrap { display: flex; align-items: center; gap: 28px; }
+  .donut-svg { flex-shrink: 0; }
+  .donut-legend { display: flex; flex-direction: column; gap: 10px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-family: 'DM Mono', monospace; font-size: 12px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legend-pct { color: var(--text); font-weight: 500; margin-left: auto; padding-left: 16px; }
+
+  /* Link selector */
+  .link-selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .link-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 7px 14px;
+    border-radius: 100px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .link-chip:hover, .link-chip.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(124,106,255,0.08);
+  }
+  .no-data {
+    text-align: center;
+    padding: 60px 0;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+  }
+
+  /* ── QR MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    max-width: 360px;
+    width: 90%;
+    text-align: center;
+    animation: popIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .modal p { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 12px; margin-bottom: 24px; }
+  #qr-canvas { border-radius: 12px; display: block; margin: 0 auto 24px; }
+  .modal-close {
+    width: 100%;
+    padding: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .modal-close:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 24px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 200;
+    white-space: nowrap;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Clicks over time mini sparkline */
+  .sparkline-wrap { display: flex; align-items: flex-end; gap: 4px; height: 48px; }
+  .spark-bar {
+    flex: 1;
+    background: rgba(124,106,255,0.3);
+    border-radius: 3px 3px 0 0;
+    transition: height 0.5s ease;
+    position: relative;
+  }
+  .spark-bar:hover { background: var(--accent); }
+  .spark-bar:hover::after {
+    content: attr(data-count);
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text);
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<!-- REDIRECT CHECK (hash-based routing) -->
+<div class="wrapper">
+
+<!-- NAV -->
+<nav>
+  <div class="logo"><span>figma</span>.fun</div>
+  <div class="nav-links">
+    <button class="active" id="nav-home" onclick="showPage('home')">Shorten</button>
+    <button id="nav-analytics" onclick="showPage('analytics')">Analytics</button>
+  </div>
+</nav>
+
+<!-- HOME PAGE -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-badge">Figma link shortener</div>
+    <h1>Turn long links into<br><span class="grad">pure fun</span></h1>
+    <p>Paste any Figma URL (or any link!) and get a<br>short, clean, shareable version in seconds.</p>
+
+    <div class="shorten-form">
+      <input type="url" id="url-input" placeholder="https://www.figma.com/file/..." autocomplete="off" spellcheck="false">
+      <button class="btn-shorten" onclick="shortenURL()">Shorten ↗</button>
+    </div>
+
+    <div class="result-box" id="result-box">
+      <div class="result-url">
+        <div class="label">your short link</div>
+        <a class="short-link" id="result-short" href="#" target="_blank"></a>
+        <div class="orig-link" id="result-orig"></div>
+      </div>
+      <div class="result-actions">
+        <button class="btn-copy" id="btn-copy" onclick="copyShort()">Copy</button>
+        <button class="btn-qr" onclick="showQR()">QR</button>
+      </div>
+    </div>
+
+    <div class="stats-strip">
+      <div class="stat">
+        <div class="stat-num" id="stat-total"><span>0</span></div>
+        <div class="stat-label">links created</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="stat-clicks"><span>0</span></div>
+        <div class="stat-label">total clicks</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="stat-today"><span>0</span></div>
+        <div class="stat-label">links today</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="recent-section">
+    <div class="section-title">Recent Links</div>
+    <div class="links-list" id="links-list"></div>
+  </div>
+</div>
+
+<!-- ANALYTICS PAGE -->
+<div class="page" id="page-analytics">
+  <div class="analytics-page">
+    <div class="page-header">
+      <h2>Analytics</h2>
+      <p>Track performance, devices, and referrers for all your links</p>
+    </div>
+
+    <div class="link-selector" id="link-selector"></div>
+
+    <div id="analytics-content">
+      <div class="no-data">Create some links first to see analytics here.</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /.wrapper -->
+
+<!-- QR Modal -->
+<div class="modal-overlay" id="qr-modal" onclick="closeQR(event)">
+  <div class="modal">
+    <h3>QR Code</h3>
+    <p id="qr-label"></p>
+    <canvas id="qr-canvas" width="200" height="200"></canvas>
+    <button class="modal-close" onclick="closeQR()">Close</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STORAGE ──────────────────────────────────────────────────────────────
+const DB_KEY = 'ff_links';
+const BASE_URL = window.location.origin + window.location.pathname;
+
+function getLinks() {
+  try { return JSON.parse(localStorage.getItem(DB_KEY) || '[]'); } catch { return []; }
+}
+function saveLinks(links) {
+  localStorage.setItem(DB_KEY, JSON.stringify(links));
+}
+function genCode(len = 8) {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  return Array.from({length: len}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+}
+
+// ── REDIRECT (hash-based) ─────────────────────────────────────────────────
+function checkRedirect() {
+  const hash = window.location.hash.slice(1); // remove #
+  if (!hash || hash.startsWith('/')) return;
+  const links = getLinks();
+  const entry = links.find(l => l.code === hash);
+  if (entry) {
+    // Record click
+    const click = {
+      ts: Date.now(),
+      ref: document.referrer || 'direct',
+      device: getDevice(),
+      ua: navigator.userAgent
+    };
+    entry.clicks.push(click);
+    entry.total_clicks = (entry.total_clicks || 0) + 1;
+    saveLinks(links);
+    window.location.replace(entry.url);
+  } else {
+    showToast('Link not found 🫠');
+  }
+}
+
+function getDevice() {
+  const ua = navigator.userAgent;
+  if (/tablet|ipad|playbook|silk/i.test(ua)) return 'tablet';
+  if (/mobile|android|iphone|ipod|blackberry|iemobile|opera mini/i.test(ua)) return 'mobile';
+  return 'desktop';
+}
+
+// ── SHORTEN ───────────────────────────────────────────────────────────────
+let lastShortened = null;
+
+function shortenURL() {
+  const input = document.getElementById('url-input');
+  const raw = input.value.trim();
+  if (!raw) { showToast('Paste a URL first!'); return; }
+
+  let url = raw;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'https://' + url;
+
+  try { new URL(url); } catch {
+    showToast('That doesn\'t look like a valid URL 🤔');
+    return;
+  }
+
+  const links = getLinks();
+  // Dedup
+  const existing = links.find(l => l.url === url);
+  if (existing) {
+    showResultBox(existing);
+    showToast('Found existing short link ✓');
+    return;
+  }
+
+  const code = genCode(8);
+  const entry = {
+    code,
+    url,
+    short: BASE_URL + '#' + code,
+    created: Date.now(),
+    total_clicks: 0,
+    clicks: []
+  };
+  links.unshift(entry);
+  saveLinks(links);
+  lastShortened = entry;
+
+  showResultBox(entry);
+  renderLinksList();
+  updateStats();
+  showToast('Link shortened! ✨');
+}
+
+document.getElementById('url-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') shortenURL();
+});
+
+function showResultBox(entry) {
+  const box = document.getElementById('result-box');
+  document.getElementById('result-short').textContent = entry.short;
+  document.getElementById('result-short').href = entry.short;
+  document.getElementById('result-orig').textContent = entry.url;
+  box.classList.add('visible');
+  lastShortened = entry;
+}
+
+function copyShort() {
+  if (!lastShortened) return;
+  navigator.clipboard.writeText(lastShortened.short).then(() => {
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    showToast('Copied to clipboard ✓');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ── LINKS LIST ────────────────────────────────────────────────────────────
+function renderLinksList() {
+  const list = document.getElementById('links-list');
+  const links = getLinks();
+  if (!links.length) {
+    list.innerHTML = '<div class="empty-state"><span class="emoji">🔗</span>No links yet. Shorten your first link above!</div>';
+    return;
+  }
+  list.innerHTML = links.slice(0, 10).map(l => {
+    const icon = getFavicon(l.url);
+    const date = new Date(l.created).toLocaleDateString('en', { month:'short', day:'numeric' });
+    return `
+      <div class="link-item" onclick="viewAnalytics('${l.code}')">
+        <div class="link-icon">${icon}</div>
+        <div class="link-info">
+          <div class="link-short">${l.short.replace(window.location.origin + window.location.pathname, '')}</div>
+          <div class="link-orig">${l.url}</div>
+        </div>
+        <div class="link-meta">
+          <span class="link-clicks">${l.total_clicks}</span>
+          <span class="link-date">${date}</span>
+        </div>
+        <div class="link-actions" onclick="event.stopPropagation()">
+          <button class="btn-sm" onclick="copyCode('${l.short}')">copy</button>
+          <button class="btn-sm danger" onclick="deleteLink('${l.code}')">del</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function getFavicon(url) {
+  try {
+    const host = new URL(url).hostname;
+    if (host.includes('figma')) return '🎨';
+    if (host.includes('github')) return '🐙';
+    if (host.includes('youtube') || host.includes('youtu.be')) return '▶️';
+    if (host.includes('notion')) return '📝';
+    if (host.includes('twitter') || host.includes('x.com')) return '🐦';
+    if (host.includes('google')) return '🔍';
+    if (host.includes('dribbble')) return '🏀';
+    if (host.includes('behance')) return '🖌';
+    if (host.includes('linear')) return '📐';
+    return '🔗';
+  } catch { return '🔗'; }
+}
+
+function copyCode(short) {
+  navigator.clipboard.writeText(short).then(() => showToast('Copied! ✓'));
+}
+
+function deleteLink(code) {
+  const links = getLinks().filter(l => l.code !== code);
+  saveLinks(links);
+  renderLinksList();
+  updateStats();
+  if (lastShortened && lastShortened.code === code) {
+    document.getElementById('result-box').classList.remove('visible');
+    lastShortened = null;
+  }
+  showToast('Link deleted');
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────
+function updateStats() {
+  const links = getLinks();
+  const today = new Date().toDateString();
+  const todayCount = links.filter(l => new Date(l.created).toDateString() === today).length;
+  const totalClicks = links.reduce((s, l) => s + (l.total_clicks || 0), 0);
+  document.getElementById('stat-total').innerHTML = `<span>${links.length}</span>`;
+  document.getElementById('stat-clicks').innerHTML = `<span>${totalClicks}</span>`;
+  document.getElementById('stat-today').innerHTML = `<span>${todayCount}</span>`;
+}
+
+// ── ANALYTICS PAGE ────────────────────────────────────────────────────────
+let selectedCode = null;
+
+function viewAnalytics(code) {
+  showPage('analytics');
+  selectedCode = code;
+  renderAnalytics();
+}
+
+function renderAnalytics() {
+  const links = getLinks();
+  const selector = document.getElementById('link-selector');
+  const content = document.getElementById('analytics-content');
+
+  if (!links.length) {
+    selector.innerHTML = '';
+    content.innerHTML = '<div class="no-data">No links created yet. Go shorten something!</div>';
+    return;
+  }
+
+  // Chips
+  selector.innerHTML = links.slice(0, 8).map(l => {
+    const code = l.code;
+    const active = selectedCode === code ? 'active' : '';
+    return `<div class="link-chip ${active}" onclick="selectChip('${code}')">${code}</div>`;
+  }).join('');
+
+  // Select first if none
+  if (!selectedCode || !links.find(l => l.code === selectedCode)) {
+    selectedCode = links[0].code;
+    renderAnalytics();
+    return;
+  }
+
+  const link = links.find(l => l.code === selectedCode);
+  if (!link) return;
+
+  const clicks = link.clicks || [];
+  const total = clicks.length;
+
+  // Device breakdown
+  const deviceMap = { desktop: 0, mobile: 0, tablet: 0 };
+  // Referrers
+  const refMap = {};
+  // Clicks per day (last 7)
+  const dayMap = {};
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    dayMap[d.toLocaleDateString('en', { month:'short', day:'numeric' })] = 0;
+  }
+
+  clicks.forEach(c => {
+    deviceMap[c.device] = (deviceMap[c.device] || 0) + 1;
+    const ref = c.ref === '' || c.ref === 'direct' ? 'direct' : (() => {
+      try { return new URL(c.ref).hostname.replace('www.', ''); } catch { return c.ref; }
+    })();
+    refMap[ref] = (refMap[ref] || 0) + 1;
+    const day = new Date(c.ts).toLocaleDateString('en', { month:'short', day:'numeric' });
+    if (day in dayMap) dayMap[day]++;
+  });
+
+  // Sort referrers
+  const refEntries = Object.entries(refMap).sort((a,b)=>b[1]-a[1]).slice(0, 6);
+  const maxRef = refEntries.length ? refEntries[0][1] : 1;
+
+  // Device colors
+  const devColors = { desktop: '#7c6aff', mobile: '#ff6ab0', tablet: '#6affcc' };
+  const devTotal = Object.values(deviceMap).reduce((a,b)=>a+b, 0) || 1;
+
+  // Sparkline
+  const dayVals = Object.values(dayMap);
+  const maxDay = Math.max(...dayVals, 1);
+
+  // SVG donut
+  const donutData = [
+    { label: 'Desktop', val: deviceMap.desktop, color: '#7c6aff' },
+    { label: 'Mobile', val: deviceMap.mobile, color: '#ff6ab0' },
+    { label: 'Tablet', val: deviceMap.tablet, color: '#6affcc' },
+  ].filter(d => d.val > 0);
+
+  const donutSVG = buildDonut(donutData, devTotal, total);
+
+  // Sparkline bars HTML
+  const sparkBars = Object.entries(dayMap).map(([day, cnt]) => {
+    const pct = Math.round((cnt / maxDay) * 100);
+    return `<div class="spark-bar" style="height:${Math.max(pct,4)}%" data-count="${cnt}" title="${day}: ${cnt}"></div>`;
+  }).join('');
+
+  content.innerHTML = `
+    <!-- Metrics -->
+    <div class="analytics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Total Clicks</div>
+        <div class="metric-value" style="color:var(--accent)">${total}</div>
+        <div class="metric-sub">${link.short}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Destination</div>
+        <div class="metric-value" style="font-size:14px;font-family:'DM Mono',monospace;color:var(--muted);word-break:break-all;letter-spacing:0">${link.url}</div>
+        <div class="metric-sub">Created ${new Date(link.created).toLocaleDateString('en', {month:'long', day:'numeric', year:'numeric'})}</div>
+      </div>
+    </div>
+
+    <!-- Sparkline -->
+    <div class="chart-card">
+      <div class="chart-title"><div class="dot" style="background:var(--accent)"></div> Clicks over last 7 days</div>
+      <div style="display:flex;gap:8px;align-items:flex-end;">
+        <div class="sparkline-wrap" style="flex:1;height:64px">
+          ${total === 0 ? '<div style="color:var(--muted);font-family:DM Mono,monospace;font-size:12px;align-self:center">No clicks yet</div>' : sparkBars}
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px">
+        ${Object.keys(dayMap).map(d=>`<span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--muted)">${d.split(' ')[1] || d}</span>`).join('')}
+      </div>
+    </div>
+
+    <!-- Device + Referrers -->
+    <div class="analytics-grid">
+      <div class="chart-card" style="margin:0">
+        <div class="chart-title"><div class="dot" style="background:var(--accent2)"></div> Devices</div>
+        ${total === 0 ? '<div style="color:var(--muted);font-family:DM Mono,monospace;font-size:12px">No data yet</div>' : `
+        <div class="donut-wrap">
+          ${donutSVG}
+          <div class="donut-legend">
+            ${donutData.map(d => `
+              <div class="legend-item">
+                <div class="legend-dot" style="background:${d.color}"></div>
+                <span>${d.label}</span>
+                <span class="legend-pct">${Math.round(d.val/devTotal*100)}%</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>`}
+      </div>
+
+      <div class="chart-card" style="margin:0">
+        <div class="chart-title"><div class="dot" style="background:var(--accent3)"></div> Referrers</div>
+        ${total === 0 ? '<div style="color:var(--muted);font-family:DM Mono,monospace;font-size:12px">No data yet</div>' : `
+        <div class="bar-chart">
+          ${refEntries.length ? refEntries.map(([ref, cnt]) => `
+            <div class="bar-row">
+              <div class="bar-label">${ref}</div>
+              <div class="bar-track"><div class="bar-fill" style="width:${Math.round(cnt/maxRef*100)}%;background:var(--accent3)"></div></div>
+              <div class="bar-count">${cnt}</div>
+            </div>
+          `).join('') : '<div style="color:var(--muted);font-family:DM Mono,monospace;font-size:12px">No referrer data</div>'}
+        </div>`}
+      </div>
+    </div>
+  `;
+}
+
+function buildDonut(data, total, clicks) {
+  if (!data.length || clicks === 0) {
+    return `<svg class="donut-svg" width="100" height="100" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="36" fill="none" stroke="#2a2a3a" stroke-width="16"/>
+    </svg>`;
+  }
+  const r = 36, cx = 50, cy = 50;
+  const circ = 2 * Math.PI * r;
+  let offset = 0;
+  const arcs = data.map(d => {
+    const pct = d.val / total;
+    const len = pct * circ;
+    const arc = { ...d, dasharray: `${len} ${circ - len}`, dashoffset: -offset };
+    offset += len;
+    return arc;
+  });
+  const paths = arcs.map(a =>
+    `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${a.color}" stroke-width="16"
+      stroke-dasharray="${a.dasharray}" stroke-dashoffset="${a.dashoffset}"
+      transform="rotate(-90 ${cx} ${cy})" opacity="0.85"/>`
+  ).join('');
+  return `<svg class="donut-svg" width="100" height="100" viewBox="0 0 100 100">
+    ${paths}
+    <text x="50" y="46" text-anchor="middle" fill="#f0eeff" font-size="16" font-weight="800" font-family="Syne,sans-serif">${clicks}</text>
+    <text x="50" y="60" text-anchor="middle" fill="#7070a0" font-size="9" font-family="DM Mono,monospace">clicks</text>
+  </svg>`;
+}
+
+function selectChip(code) {
+  selectedCode = code;
+  renderAnalytics();
+}
+
+// ── QR CODE ───────────────────────────────────────────────────────────────
+function showQR() {
+  if (!lastShortened) return;
+  document.getElementById('qr-label').textContent = lastShortened.short;
+  drawQR(lastShortened.short);
+  document.getElementById('qr-modal').classList.add('open');
+}
+function closeQR(e) {
+  if (!e || e.target === document.getElementById('qr-modal') || !e.target) {
+    document.getElementById('qr-modal').classList.remove('open');
+  }
+}
+
+// Minimal QR code generator (pure JS, no library needed for basic version)
+function drawQR(text) {
+  const canvas = document.getElementById('qr-canvas');
+  const ctx = canvas.getContext('2d');
+  // Use a QR API since we're in a browser context
+  const size = 200;
+  canvas.width = size;
+  canvas.height = size;
+  ctx.fillStyle = '#1a1a24';
+  ctx.fillRect(0, 0, size, size);
+
+  // Use Google Charts QR API as fallback (works in most browsers)
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    ctx.fillStyle = '#1a1a24';
+    ctx.fillRect(0, 0, size, size);
+    ctx.drawImage(img, 10, 10, 180, 180);
+  };
+  img.onerror = () => {
+    // Draw fallback text
+    ctx.fillStyle = '#f0eeff';
+    ctx.font = '12px DM Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('QR requires internet', size/2, size/2 - 8);
+    ctx.fillText('connection to generate', size/2, size/2 + 12);
+  };
+  img.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(text)}&color=f0eeff&bgcolor=1a1a24`;
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  if (name === 'analytics') renderAnalytics();
+}
+
+// ── TOAST ──────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+checkRedirect();
+renderLinksList();
+updateStats();
+
+// Add some demo analytics data if no links exist
+(function addDemoData() {
+  const links = getLinks();
+  if (links.length > 0) return; // Don't add demo if user has links
+  // Just show empty state nicely
+})();
+</script>
+</body>
+</html>
